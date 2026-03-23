@@ -3,198 +3,129 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Medical Kernel v10.0 - Persistent</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <title>Medical Water Kernel v5.0</title>
     <style>
-        :root { --bg: #000; --card: #1c1c1e; --blue: #0a84ff; --cyan: #64d2ff; --green: #30d158; --gray: #8e8e93; --red: #ff453a; }
-        body { font-family: -apple-system, sans-serif; background: var(--bg); color: white; margin: 0; padding: 15px; padding-bottom: 50px; }
-        .card { background: var(--card); border-radius: 15px; padding: 18px; margin-bottom: 15px; border: 1px solid #333; }
-        h2 { font-size: 0.75rem; color: var(--gray); text-transform: uppercase; margin-bottom: 12px; letter-spacing: 1px; }
-        .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; text-align: center; }
-        .val { font-size: 1.3rem; font-weight: bold; color: var(--blue); display: block; }
-        .unit { font-size: 0.7rem; color: var(--gray); display: block; margin-bottom: 4px; }
-        .dist-container { margin: 15px 0 5px; background: #2c2c2e; border-radius: 8px; height: 26px; display: flex; overflow: hidden; border: 1px solid #444; }
-        .bar-icw { background: var(--cyan); height: 100%; transition: width 0.6s ease; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: bold; color: #000; }
-        .bar-ecw { background: var(--blue); height: 100%; transition: width 0.6s ease; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: bold; }
-        .progress-box { position: relative; width: 100px; height: 100px; margin: 0 auto; }
-        svg { transform: rotate(-90deg); width: 100px; height: 100px; }
-        circle { fill: none; stroke-width: 7; stroke-linecap: round; cx: 50; cy: 50; r: 44; }
-        .bg { stroke: #333; }
-        .fg { stroke: var(--blue); transition: stroke-dashoffset 0.8s ease; }
-        .pct { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 1.1rem; font-weight: bold; }
-        input, select, button { width: 100%; padding: 12px; margin: 5px 0; border-radius: 10px; border: none; font-size: 1rem; box-sizing: border-box; outline: none; }
-        input { background: #2c2c2e; color: white; border: 1px solid #444; }
-        select { background: #2c2c2e; color: var(--cyan); border: 1px solid var(--blue); }
-        button { background: var(--blue); color: white; font-weight: bold; margin-top: 8px; }
-        .btn-reset { background: #3a3a3c; color: var(--red); font-size: 0.85rem; margin-top: 12px; }
+        :root { --bg: #000; --card: #1c1c1e; --blue: #0a84ff; --green: #30d158; --gray: #8e8e93; --red: #ff453a; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: white; margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+        
+        .card { background: var(--card); border-radius: 20px; padding: 20px; width: 100%; max-width: 350px; margin-bottom: 15px; box-shadow: 0 10px 20px rgba(0,0,0,0.5); border: 1px solid #333; }
+        h2 { font-size: 0.8rem; color: var(--gray); text-transform: uppercase; margin-bottom: 15px; letter-spacing: 1px; }
+        
+        .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .stat-box { display: flex; flex-direction: column; }
+        .label { font-size: 0.75rem; color: var(--gray); }
+        .value { font-size: 1.4rem; font-weight: bold; color: var(--blue); }
+        .unit { font-size: 0.8rem; color: var(--gray); font-weight: normal; }
+
+        .progress-container { width: 100%; background: #333; height: 10px; border-radius: 5px; margin: 15px 0; overflow: hidden; }
+        .progress-bar { height: 100%; background: var(--blue); width: 0%; transition: width 0.5s ease; }
+
+        input { width: 100%; background: #2c2c2e; border: 1px solid #444; color: white; padding: 12px; border-radius: 10px; margin: 8px 0; font-size: 1rem; box-sizing: border-box; }
+        button { width: 100%; background: var(--blue); color: white; border: none; padding: 15px; border-radius: 12px; font-weight: bold; font-size: 1rem; cursor: pointer; transition: transform 0.1s; }
+        button:active { transform: scale(0.98); background: #0071e3; }
+
+        .badge { display: inline-block; padding: 4px 8px; border-radius: 6px; font-size: 0.7rem; font-weight: bold; margin-top: 5px; }
+        .badge-ok { background: rgba(48, 209, 88, 0.2); color: var(--green); }
+        .badge-alert { background: rgba(255, 69, 58, 0.2); color: var(--red); }
+        
+        #logSystem { font-family: monospace; font-size: 0.7rem; color: var(--green); margin-top: 10px; text-align: center; }
     </style>
 </head>
 <body>
 
-    <div class="card" style="display: flex; align-items: center; gap: 20px;">
-        <div class="progress-box">
-            <svg><circle class="bg"></circle><circle class="fg" id="ring"></circle></svg>
-            <div class="pct" id="totalL">0.00L</div>
-        </div>
-        <div style="flex-grow: 1;">
-            <span class="unit">Resistenza Attuale</span>
-            <span class="val" id="uiOhm" style="color: var(--green);">-- Ω</span>
-            <span class="unit" id="statusMsg">Caricamento memoria...</span>
-        </div>
-    </div>
-
     <div class="card">
-        <h2>Bilancio Fluidi (ICW/ECW)</h2>
-        <div class="dist-container"><div id="barICW" class="bar-icw">--</div><div id="barECW" class="bar-ecw">--</div></div>
-        <div class="stat-grid" style="margin-top: 15px;">
-            <div><span class="unit">Litri Intra (ICW)</span><span id="litriICW" class="val" style="color:var(--cyan)">--</span></div>
-            <div><span class="unit">Litri Extra (ECW)</span><span id="litriECW" class="val">--</span></div>
+        <h2>Dashboard Medica</h2>
+        <div class="stat-grid">
+            <div class="stat-box">
+                <span class="label">Acqua Totale (TBW)</span>
+                <span class="value" id="uiTbw">-- <span class="unit">L</span></span>
+            </div>
+            <div class="stat-box">
+                <span class="label">Ritenzione Idrica</span>
+                <span class="value" id="uiRit">--</span>
+                <div id="uiRitBadge"></div>
+            </div>
+            <div class="stat-box">
+                <span class="label">Intra (ICW)</span>
+                <span class="value" id="uiIcw" style="color: #64d2ff;">-- <span class="unit">L</span></span>
+            </div>
+            <div class="stat-box">
+                <span class="label">Extra (ECW)</span>
+                <span class="value" id="uiEcw">-- <span class="unit">L</span></span>
+            </div>
         </div>
-    </div>
-
-    <div class="card">
-        <canvas id="hydrationChart" height="130"></canvas>
-    </div>
-
-    <div class="card">
-        <h2>Simulatore</h2>
-        <div style="display: flex; gap: 10px;">
-            <input type="number" id="h" value="180" onchange="salvaDati()">
-            <input type="number" id="p" value="80" onchange="salvaDati()">
-        </div>
-        <select id="tipoBevanda">
-            <option value="1.0">Acqua Naturale (100%)</option>
-            <option value="0.9">Tè / Tisana (90%)</option>
-            <option value="0.8">Spremuta / Bibita (80%)</option>
-            <option value="0.7">Caffè (70%)</option>
-        </select>
-        <select id="quantita">
-            <option value="0.25">250ml (Bicchiere)</option>
-            <option value="0.50">500ml (Bottiglia)</option>
-            <option value="0.125">125ml (Tazza/Caffè)</option>
-        </select>
-        <button onclick="simulaBevuta()">Registra Assunzione</button>
-        <button class="btn-reset" onclick="resetGiorno()">Reset Giornata</button>
-    </div>
-
-<script>
-    let bevutoOggi = 0;
-    let rCorrente = 0;
-    const TARGET = 2.0;
-    const circ = 44 * 2 * Math.PI;
-    let chart;
-    let dataPoints = new Array(48).fill(0);
-
-    function init() {
-        const ctx = document.getElementById('hydrationChart').getContext('2d');
-        chart = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: Array.from({length: 48}, (_, i) => `${Math.floor(i/2)}:${i%2===0?"00":"30"}`),
-                datasets: [{ data: dataPoints, borderColor: '#0a84ff', backgroundColor: 'rgba(10, 132, 255, 0.1)', fill: true, tension: 0.4, pointRadius: 0 }]
-            },
-            options: { scales: { y: { min: 0, max: 2.5, ticks: { display: false }, grid: { display: false } }, x: { ticks: { color: '#8e8e93', maxTicksLimit: 6 }, grid: { display: false } } }, plugins: { legend: { display: false } } }
-        });
         
-        caricaDati();
-    }
+        <div style="margin-top: 20px;">
+            <span class="label">Obiettivo Idratazione: <span id="uiBevutoText">0</span> / 2.0 L</span>
+            <div class="progress-container">
+                <div class="progress-bar" id="uiBar"></div>
+            </div>
+        </div>
+    </div>
 
-    // --- LOGICA DI MEMORIA ---
-    function salvaDati() {
-        const h = document.getElementById('h').value;
-        const p = document.getElementById('p').value;
-        const stato = {
-            bevutoOggi,
-            rCorrente,
-            dataPoints,
-            h,
-            p,
-            ultimoSalvataggio: new Date().toLocaleDateString()
-        };
-        localStorage.setItem('medicalKernelData', JSON.stringify(stato));
-    }
+    <div class="card">
+        <h2>Input Biometrico</h2>
+        <input type="number" id="inputH" placeholder="Altezza (cm)" value="180">
+        <input type="number" id="inputP" placeholder="Peso (kg)" value="80">
+        <input type="number" id="inputR" placeholder="Resistenza Ohm (es. 620)">
+        <button onclick="calcola()">Analizza Dati</button>
+        <div id="logSystem">In attesa di scansione...</div>
+    </div>
 
-    function caricaDati() {
-        const salvataggio = localStorage.getItem('medicalKernelData');
-        if (salvataggio) {
-            const dati = JSON.parse(salvataggio);
-            // Controllo se il salvataggio è di oggi
-            if (dati.ultimoSalvataggio === new Date().toLocaleDateString()) {
-                bevutoOggi = dati.bevutoOggi;
-                rCorrente = dati.rCorrente;
-                dati.dataPoints.forEach((v, i) => dataPoints[i] = v);
-                document.getElementById('h').value = dati.h;
-                document.getElementById('p').value = dati.p;
-                document.getElementById('statusMsg').innerText = "Dati ripristinati";
-            } else {
-                inizializzaNuovoGiorno();
-                document.getElementById('statusMsg').innerText = "Nuovo giorno rilevato";
+    <script>
+        let tbwRiferimento = 0;
+        let bevutoOggi = 0;
+
+        function calcola() {
+            // Prendo i valori dall'interfaccia
+            const h = parseFloat(document.getElementById('inputH').value);
+            const p = parseFloat(document.getElementById('inputP').value);
+            const rLeotta = parseFloat(document.getElementById('inputR').value);
+
+            if (!rLeotta) {
+                alert("Inserisci il valore di Resistenza!");
+                return;
             }
-        } else {
-            inizializzaNuovoGiorno();
-            document.getElementById('statusMsg').innerText = "Configurazione iniziale";
+
+            // Logica del Kernel (dal tuo codice C)
+            const coeffPolso = 0.88;
+            const r_p = rLeotta * coeffPolso;
+
+            const tbw = (0.396 * (Math.pow(h, 2) / r_p)) + (0.143 * p) + 8.4;
+            const ecw = (0.188 * (Math.pow(h, 2) / r_p)) + (0.110 * p) + 2.5;
+            const icw = tbw - ecw;
+            const ritenzione = ecw / tbw;
+            const bcm = icw / 0.70;
+
+            // Logica rilevamento bevuta automatica
+            if (tbwRiferimento > 0) {
+                let delta = tbw - tbwRiferimento;
+                if (delta >= 0.150) {
+                    bevutoOggi += delta;
+                    document.getElementById('logSystem').innerText = "RILEVATO INGRESSO LIQUIDI: +" + delta.toFixed(2) + "L";
+                }
+            }
+            tbwRiferimento = tbw;
+
+            // Aggiornamento UI
+            document.getElementById('uiTbw').innerHTML = tbw.toFixed(2) + ' <span class="unit">L</span>';
+            document.getElementById('uiIcw').innerHTML = icw.toFixed(1) + ' <span class="unit">L</span>';
+            document.getElementById('uiEcw').innerHTML = ecw.toFixed(1) + ' <span class="unit">L</span>';
+            document.getElementById('uiRit').innerText = ritenzione.toFixed(3);
+            
+            // Gestione Badge Ritenzione
+            const badge = document.getElementById('uiRitBadge');
+            if (ritenzione > 0.40) {
+                badge.innerHTML = '<span class="badge badge-alert">ALTA RITENZIONE</span>';
+            } else {
+                badge.innerHTML = '<span class="badge badge-ok">NORMALE</span>';
+            }
+
+            // Barra progresso
+            const pct = Math.min((bevutoOggi / 2.0) * 100, 100);
+            document.getElementById('uiBar').style.width = pct + "%";
+            document.getElementById('uiBevutoText').innerText = bevutoOggi.toFixed(2);
         }
-        chart.update();
-        aggiornaUI();
-    }
-
-    function inizializzaNuovoGiorno() {
-        const h = parseFloat(document.getElementById('h').value);
-        const p = parseFloat(document.getElementById('p').value);
-        bevutoOggi = 0;
-        dataPoints.fill(0);
-        const tbwTeorico = p * 0.58; 
-        rCorrente = (0.396 * Math.pow(h, 2)) / ((tbwTeorico - 8.4 - 0.143 * p) * 0.88);
-        salvaDati();
-    }
-
-    function simulaBevuta() {
-        const mlEffettivi = parseFloat(document.getElementById('quantita').value) * parseFloat(document.getElementById('tipoBevanda').value);
-        rCorrente -= (rCorrente * 0.045) * (mlEffettivi / 1.0); 
-        bevutoOggi += mlEffettivi;
-
-        const index = new Date().getHours() * 2 + (new Date().getMinutes() >= 30 ? 1 : 0);
-        for(let i = index; i < 48; i++) dataPoints[i] = bevutoOggi;
-        
-        chart.update();
-        aggiornaUI();
-        salvaDati();
-        document.getElementById('statusMsg').innerText = "Dato salvato in locale";
-    }
-
-    function aggiornaUI() {
-        const h = parseFloat(document.getElementById('h').value);
-        const p = parseFloat(document.getElementById('p').value);
-        const rp = rCorrente * 0.88;
-        const tbw = (0.396 * (Math.pow(h, 2) / rp)) + (0.143 * p) + 8.4;
-        const ecw = (0.188 * (Math.pow(h, 2) / rp)) + (0.110 * p) + 2.5;
-        const icw = tbw - ecw;
-        
-        document.getElementById('uiOhm').innerText = Math.round(rCorrente) + " Ω";
-        document.getElementById('totalL').innerText = bevutoOggi.toFixed(2) + "L";
-        document.getElementById('litriICW').innerText = icw.toFixed(1) + " L";
-        document.getElementById('litriECW').innerText = ecw.toFixed(1) + " L";
-
-        const pctICW = (icw / tbw) * 100;
-        document.getElementById('barICW').style.width = pctICW + "%";
-        document.getElementById('barECW').style.width = (100 - pctICW) + "%";
-        document.getElementById('barICW').innerText = Math.round(pctICW) + "%";
-        document.getElementById('barECW').innerText = Math.round(100 - pctICW) + "%";
-
-        const ring = document.getElementById('ring');
-        ring.style.strokeDasharray = circ;
-        ring.style.strokeDashoffset = circ - (Math.min(bevutoOggi / TARGET, 1) * circ);
-    }
-
-    function resetGiorno() {
-        localStorage.removeItem('medicalKernelData');
-        inizializzaNuovoGiorno();
-        chart.update();
-        aggiornaUI();
-        document.getElementById('statusMsg').innerText = "Memoria cancellata";
-    }
-
-    window.onload = init;
-</script>
+    </script>
 </body>
 </html>
